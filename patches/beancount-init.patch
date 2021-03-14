@@ -1,0 +1,11 @@
+--- sp1/beancount/__init__.py	2021-03-14 07:16:29.000000000 -0600
++++ sp2/beancount/__init__.py	2021-03-14 07:54:41.000000000 -0600
+@@ -12,7 +12,7 @@
+ 
+ # Read in the VERSION number from package data.
+ from os import path
+-with open(path.join(path.dirname(__file__), "VERSION")) as version_file:
++with open(path.join(sys._MEIPASS, "beancount-src", "VERSION")) as version_file:
+     __version__ = version_file.read().strip()
+ 
+ 

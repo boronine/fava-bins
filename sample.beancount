@@ -1,0 +1,9 @@
+option "operating_currency" "CAD"
+
+2018-01-01 open Equity:OpeningBalances
+2018-01-01 open Assets:Current:Bank
+
+2018-01-01 * "Initial"
+    Equity:OpeningBalances -1994.69 CAD
+    Assets:Current:Bank 1994.69 CAD
+

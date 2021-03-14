@@ -1,0 +1,15 @@
+--- venv-build/lib/python3.9/site-packages/fava/__init__.py	2021-03-14 08:50:08.000000000 -0600
++++ init2.py	2021-03-14 08:51:25.000000000 -0600
+@@ -1,12 +1,4 @@
+ """Fava – A web interface for Beancount."""
+-from pkg_resources import DistributionNotFound
+-from pkg_resources import get_distribution
+-
+-try:
+-    __version__ = get_distribution(__name__).version
+-except DistributionNotFound:
+-    # package is not installed
+-    pass
+ 
+ LOCALES = [
+     "ca",
