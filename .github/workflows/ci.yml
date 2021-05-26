@@ -21,7 +21,7 @@ jobs:
           - os: [self-hosted, Linux, ARM64]
             tag: linux-arm64
     env:
-      FAVA_VERSION: "1.18"
+      FAVA_VERSION: "1.19"
     steps:
       - uses: actions/checkout@v2
       - name: Build
