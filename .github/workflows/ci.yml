@@ -35,8 +35,9 @@ jobs:
           path: artifacts
       - name: Zip artifacts
         run: |
-          for d in ./artifacts/; do
-            (cd "./artifacts/$d"; zip -r "../$d.zip" .)
+          cd ./artifacts
+          for d in ./; do
+            (cd "$d"; zip -r "../$d.zip" .)
           done
       - run: find artifacts
       - uses: ncipollo/release-action@v1
