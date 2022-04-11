@@ -9,6 +9,7 @@ echo ">>>>>>>>>> Set up venv for pyinstaller"
 python3 -m venv venv-pyinstaller
 . venv-pyinstaller/bin/activate
 pip3 install pyinstaller
+pip3 install importlib-metadata
 deactivate
 
 echo ">>>>>>>>>> Set up venv for dependencies"

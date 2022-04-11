@@ -25,10 +25,15 @@ jobs:
           name: fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}
           path: dist
   release:
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
+      - uses: actions/download-artifact@v3
+        with:
+          path: artifacts
       - uses: ncipollo/release-action@v1
         with:
+          artifacts: artifacts/*
           token: ${{ secrets.GITHUB_TOKEN }}
