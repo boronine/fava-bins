@@ -36,4 +36,6 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           artifacts: artifacts/*
+          tag: fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}
+          body: "Source: https://pypi.org/project/fava/${{ env.FAVA_VERSION }}/"
           token: ${{ secrets.GITHUB_TOKEN }}
