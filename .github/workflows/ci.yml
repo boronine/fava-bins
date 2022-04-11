@@ -1,32 +1,53 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # 3:00 AM every night
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: macos-10.15
-            tag: darwin-amd64
-          - os: ubuntu-20.04
-            tag: linux-amd64
-          - os: [self-hosted, Linux, ARM64]
-            tag: linux-arm64
-    env:
-      FAVA_VERSION: "1.19"
+  check-version:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: ./build.sh
-      - uses: actions/upload-artifact@v2
+      - name: Detect latest version
+        run: |
+          FAVA_VERSION=$(curl "https://pypi.org/rss/project/fava/releases.xml" | python3 -c "import sys, re; sys.stdout.write(re.search('<title>([0-9\\.]+)</title>', sys.stdin.read())[1])")
+          echo "Latest version: $FAVA_VERSION"
+          echo "FAVA_VERSION=$FAVA_VERSION" >> ${{ github.env }}
+      - uses: ncipollo/release-action@v1
         with:
-          name: fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}
-          path: dist
+          tag: fava-${{ env.FAVA_VERSION }}
+          # Fail if release exists
+          allowUpdates: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+#  build:
+#    needs: [ check-version ]
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        include:
+#          - os: macos-10.15
+#            tag: darwin-amd64
+#          - os: ubuntu-20.04
+#            tag: linux-amd64
+#          - os: [ self-hosted, Linux, ARM64 ]
+#            tag: linux-arm64
+#    env:
+#      FAVA_VERSION: "1.19"
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          # Force fetching tags
+#          fetch-depth: 0
+#      - name: Detect latest version
+#        run: |
+#          FAVA_VERSION=$(curl "https://pypi.org/rss/project/fava/releases.xml" | python3 -c "import sys, re; sys.stdout.write(re.search('<title>([0-9\\.]+)</title>', sys.stdin.read())[1])")
+#          echo "Latest version: $FAVA_VERSION"
+#          echo "FAVA_VERSION=$FAVA_VERSION" >> ${{ github.env }}
+#      - name: Build
+#        run: ./build.sh
+#      - uses: actions/upload-artifact@v2
+#        with:
+#          name: fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}
+#          path: dist
