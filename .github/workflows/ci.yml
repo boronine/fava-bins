@@ -2,31 +2,9 @@ name: CI
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 3 * * *' # 3:00 AM every night
 
 jobs:
-  check-version:
-    runs-on: ubuntu-latest
-    outputs:
-      fava-version: ${{ steps.detect-version.outputs.fava-version }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Detect latest version
-        id: detect-version
-        run: |
-          FAVA_VERSION=$(curl "https://pypi.org/rss/project/fava/releases.xml" | python3 -c "import sys, re; sys.stdout.write(re.search('<title>([0-9\\.]+)</title>', sys.stdin.read())[1])")
-          echo "Latest version: $FAVA_VERSION"
-          echo "::set-output name=fava-version::$FAVA_VERSION"
-      - uses: ncipollo/release-action@v1
-        continue-on-error: true
-        with:
-          tag: fava-${{ steps.detect-version.outputs.fava-version }}
-          # Fail if release exists
-          allowUpdates: false
-          token: ${{ secrets.GITHUB_TOKEN }}
   build:
-    needs: [ check-version ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -37,21 +15,20 @@ jobs:
             tag: linux-amd64
           - os: [ self-hosted, Linux, ARM64 ]
             tag: linux-arm64
-    env:
-      FAVA_VERSION: "1.19"
     steps:
       - uses: actions/checkout@v2
-        with:
-          # Force fetching tags
-          fetch-depth: 0
-      - name: Detect latest version
-        run: |
-          FAVA_VERSION=$(curl "https://pypi.org/rss/project/fava/releases.xml" | python3 -c "import sys, re; sys.stdout.write(re.search('<title>([0-9\\.]+)</title>', sys.stdin.read())[1])")
-          echo "Latest version: $FAVA_VERSION"
-          echo "FAVA_VERSION=$FAVA_VERSION" >> ${{ github.env }}
+      - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
       - name: Build
         run: ./build.sh
       - uses: actions/upload-artifact@v2
         with:
           name: fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}
           path: dist
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
+      - uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
