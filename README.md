@@ -32,7 +32,5 @@ EC2 instance: Ubuntu 20.04
 Dependencies:
 
 ```
-sudo apt-get install build-essential
-sudo apt-get install zlib1g-dev
-sudo apt-get install python3-dev
+sudo apt-get install build-essential zip zlib1g-dev python3-dev
 ```

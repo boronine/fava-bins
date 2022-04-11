@@ -2,11 +2,7 @@ name: CI
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,19 +10,43 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-10.15
+          - os: macos-latest
             tag: darwin-amd64
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             tag: linux-amd64
-          - os: [self-hosted, Linux, ARM64]
+          - os: [ self-hosted, Linux, ARM64 ]
             tag: linux-arm64
-    env:
-      FAVA_VERSION: "1.19"
     steps:
       - uses: actions/checkout@v2
+      - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
       - name: Build
-        run: ./build.sh
+        run: |
+          ./build.sh
+          cd dist && zip -r fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}.zip .
       - uses: actions/upload-artifact@v2
         with:
-          name: fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}
-          path: dist
+          name: ${{ matrix.tag }}
+          path: dist/*.zip
+  release:
+    needs: [ build ]
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
+      - uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      - name: Zip artifacts
+        working-directory: artifacts
+        run: |
+          for d in */; do
+            (cd "$d" && zip -r "../$d.zip" .)
+          done
+      - run: find artifacts
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "artifacts/**/*.zip"
+          tag: "fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}"
+          body: "Source: https://pypi.org/project/fava/${{ env.FAVA_VERSION }}/"
+          token: ${{ secrets.GITHUB_TOKEN }}
