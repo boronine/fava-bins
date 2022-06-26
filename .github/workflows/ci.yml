@@ -1,4 +1,5 @@
 name: CI
+# We intentionally choose an older version of Ubuntu to make the binary depend on an older version of glibc
 
 on:
   push:
@@ -12,10 +13,8 @@ jobs:
         include:
           - os: macos-latest
             tag: darwin-amd64
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             tag: linux-amd64
-          - os: [ self-hosted, Linux, ARM64 ]
-            tag: linux-arm64
     steps:
       - uses: actions/checkout@v2
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
@@ -27,8 +26,31 @@ jobs:
         with:
           name: ${{ matrix.tag }}
           path: dist/*.zip
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: --volume "${PWD}:/src"
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y python3 python3-pip python3-venv zip
+          run: |
+            cd /src
+            FAVA_VERSION=${{ env.FAVA_VERSION }} ./build.sh
+            cd dist && zip -r fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-linux-arm64.zip .
+      - uses: actions/upload-artifact@v2
+        with:
+          name: linux-arm64
+          path: dist/*.zip
   release:
-    needs: [ build ]
+    needs: [ build, build-linux-arm64 ]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
