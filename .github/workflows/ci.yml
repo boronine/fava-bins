@@ -4,9 +4,32 @@ name: CI
 on:
   push:
   workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # 3:00 AM every night
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      changes_detected: ${{ steps.auto-commit-action.outputs.changes_detected }}
+      commit_hash: ${{ steps.auto-commit-action.outputs.commit_hash }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Detect latest version
+        run: |
+          FAVA_VERSION=$(curl "https://pypi.org/rss/project/fava/releases.xml" | python3 -c "import sys, re; sys.stdout.write(re.search('<title>([0-9\\.]+)</title>', sys.stdin.read())[1])")
+          echo "Latest version: $FAVA_VERSION"
+          echo "$FAVA_VERSION" > FAVA_VERSION
+          echo "FAVA_VERSION=$FAVA_VERSION" >> ${{ github.env }}
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        id: auto-commit-action
+        name: "Update FAVA_VERSION file"
+        with:
+          commit_message: Bump fava to ${{ env.FAVA_VERSION }}
+
   build:
+    needs: [ check ]
+    if: needs.check.outputs.changes_detected == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -17,6 +40,8 @@ jobs:
             tag: linux-amd64
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
       - name: Build
         run: |
@@ -26,10 +51,15 @@ jobs:
         with:
           name: ${{ matrix.tag }}
           path: dist/*.zip
+
   build-linux-arm64:
+    needs: [ check ]
+    if: needs.check.outputs.changes_detected == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
       - uses: uraimo/run-on-arch-action@v2
         name: Build
@@ -49,12 +79,15 @@ jobs:
         with:
           name: linux-arm64
           path: dist/*.zip
+
   release:
     needs: [ build, build-linux-arm64 ]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
       - uses: actions/download-artifact@v3
         with:
