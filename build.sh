@@ -8,13 +8,14 @@ rm -rf venv-pyinstaller venv-build build dist cli.spec
 echo ">>>>>>>>>> Set up venv for pyinstaller"
 python3 -m venv venv-pyinstaller
 . venv-pyinstaller/bin/activate
-pip3 install --progress-bar=off pyinstaller importlib-metadata
+pip3 install --progress-bar=off --no-color pyinstaller importlib-metadata
 deactivate
 
 echo ">>>>>>>>>> Set up venv for dependencies"
 python3 -m venv venv-build
 . venv-build/bin/activate
-pip3 install --progress-bar=off "fava==$FAVA_VERSION"
+pip3 install --progress-bar=off --no-color wheel
+pip3 install --progress-bar=off --no-color "fava==$FAVA_VERSION"
 pip3 freeze > VERSIONS
 SITE_PACKAGES=$(python3 -c 'import site; print(site.getsitepackages()[0])')
 deactivate
