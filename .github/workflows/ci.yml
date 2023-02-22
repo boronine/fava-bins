@@ -81,7 +81,7 @@ jobs:
           path: dist/*.zip
 
   release:
-    needs: [ build, build-linux-arm64 ]
+    needs: [ build, build-linux-arm64, check ]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
