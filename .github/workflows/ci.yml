@@ -14,7 +14,7 @@ jobs:
       changes_detected: ${{ steps.auto-commit-action.outputs.changes_detected }}
       commit_hash: ${{ steps.auto-commit-action.outputs.commit_hash }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Detect latest version
         run: |
           FAVA_VERSION=$(curl "https://pypi.org/rss/project/fava/releases.xml" | python3 -c "import sys, re; sys.stdout.write(re.search('<title>([0-9\\.]+)</title>', sys.stdin.read())[1])")
@@ -39,7 +39,7 @@ jobs:
           - os: ubuntu-20.04
             tag: linux-amd64
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
@@ -47,7 +47,7 @@ jobs:
         run: |
           ./build.sh
           cd dist && zip -r fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}.zip .
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.tag }}
           path: dist/*.zip
@@ -57,7 +57,7 @@ jobs:
     if: needs.check.outputs.changes_detected == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
@@ -75,7 +75,7 @@ jobs:
             cd /src
             FAVA_VERSION=${{ env.FAVA_VERSION }} ./build.sh
             cd dist && zip -r fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-linux-arm64.zip .
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: linux-arm64
           path: dist/*.zip
@@ -85,7 +85,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
