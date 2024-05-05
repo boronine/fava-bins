@@ -22,7 +22,7 @@ deactivate
 
 echo ">>>>>>>>>> Apply patches"
 patch "$SITE_PACKAGES/fava/__init__.py" patches/fava-init.patch
-patch "$SITE_PACKAGES/fava/util/__init__.py" patches/fava-util-init.patch
+patch "$SITE_PACKAGES/fava/application.py" patches/fava-application.patch
 patch "$SITE_PACKAGES/beancount/__init__.py" patches/beancount-init.patch
 echo "__version__ = '$FAVA_VERSION'" >> "$SITE_PACKAGES/fava/__init__.py"
 

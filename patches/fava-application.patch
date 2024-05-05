@@ -1,0 +1,39 @@
+diff --git a/venv-build/lib/python3.10/site-packages/fava/application.py b/venv-build/lib/python3.10/site-packages/fava/application2.py
+index eb345da..032d3e5 100644
+--- a/venv-build/lib/python3.10/site-packages/fava/application.py
++++ b/venv-build/lib/python3.10/site-packages/fava/application2.py
+@@ -12,6 +12,7 @@ To start a simple server::
+ 
+ from __future__ import annotations
+ 
++import sys
+ import logging
+ import mimetypes
+ from dataclasses import fields
+@@ -114,7 +115,7 @@ def _ledger_slugs_dict(ledgers: Iterable[FavaLedger]) -> dict[str, FavaLedger]:
+ 
+ def static_url(filename: str) -> str:
+     """Return a static url with an mtime query string for cache busting."""
+-    file_path = Path(__file__).parent / "static" / filename
++    file_path = Path(sys._MEIPASS) / 'fava-src' / "static" / filename
+     try:
+         mtime = str(int(file_path.stat().st_mtime))
+     except FileNotFoundError:
+@@ -375,7 +376,7 @@ def _setup_routes(fava_app: Flask) -> None:  # noqa: PLR0915
+         if page_slug not in HELP_PAGES:
+             abort(404)
+         html = markdown2.markdown_path(
+-            (Path(__file__).parent / "help" / (page_slug + ".md")),
++            (Path(sys._MEIPASS) / 'fava-src' / "help" / (page_slug + ".md")),
+             extras=["fenced-code-blocks", "tables", "header-ids"],
+         )
+         return render_template(
+@@ -451,7 +451,7 @@ def create_app(
+         incognito: Whether to run in incognito mode.
+         read_only: Whether to run in read-only mode.
+     """
+-    fava_app = Flask("fava")
++    fava_app = Flask("fava", root_path=Path(sys._MEIPASS) / 'fava-src')
+     fava_app.register_blueprint(json_api, url_prefix="/<bfile>/api")
+     fava_app.json = FavaJSONProvider(fava_app)
+     fava_app.app_ctx_globals_class = Context  # type: ignore[assignment]

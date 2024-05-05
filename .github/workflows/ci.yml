@@ -9,19 +9,19 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       changes_detected: ${{ steps.auto-commit-action.outputs.changes_detected }}
       commit_hash: ${{ steps.auto-commit-action.outputs.commit_hash }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Detect latest version
         run: |
           FAVA_VERSION=$(curl "https://pypi.org/rss/project/fava/releases.xml" | python3 -c "import sys, re; sys.stdout.write(re.search('<title>([0-9\\.]+)</title>', sys.stdin.read())[1])")
           echo "Latest version: $FAVA_VERSION"
           echo "$FAVA_VERSION" > FAVA_VERSION
           echo "FAVA_VERSION=$FAVA_VERSION" >> ${{ github.env }}
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: stefanzweifel/git-auto-commit-action@v5
         id: auto-commit-action
         name: "Update FAVA_VERSION file"
         with:
@@ -39,7 +39,7 @@ jobs:
           - os: ubuntu-20.04
             tag: linux-amd64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
@@ -47,7 +47,7 @@ jobs:
         run: |
           ./build.sh
           cd dist && zip -r fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-${{ matrix.tag }}.zip .
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.tag }}
           path: dist/*.zip
@@ -55,9 +55,9 @@ jobs:
   build-linux-arm64:
     needs: [ check ]
     if: needs.check.outputs.changes_detected == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
@@ -75,7 +75,7 @@ jobs:
             cd /src
             FAVA_VERSION=${{ env.FAVA_VERSION }} ./build.sh
             cd dist && zip -r fava-${{ env.FAVA_VERSION }}-${{ github.run_id }}-linux-arm64.zip .
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-arm64
           path: dist/*.zip
@@ -83,13 +83,13 @@ jobs:
   release:
     needs: [ build, build-linux-arm64, check ]
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.check.outputs.commit_hash }}
       - run: echo "FAVA_VERSION=$(cat FAVA_VERSION)" >> ${{ github.env }}
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
       - name: Zip artifacts
